@@ -69,6 +69,10 @@ function bindTopbar() {
 // ---- Settings ----
 function bindSettingsModal() {
   document.getElementById('settingsBtn').addEventListener('click', () => {
+    // Prevent stacking on top of the appointment or questions modal
+    document.getElementById('apptModal').hidden = true;
+    document.getElementById('questionsModal').hidden = true;
+
     document.getElementById('changePasswordForm').reset();
     document.getElementById('settingsError').hidden = true;
     document.getElementById('settingsSuccess').hidden = true;
@@ -220,6 +224,9 @@ function bindApptModal() {
 }
 
 async function openApptModal(id) {
+  document.getElementById('settingsModal').hidden = true;
+  document.getElementById('questionsModal').hidden = true;
+
   editingApptId = id;
   pendingAttachments = [];
   const form = document.getElementById('apptForm');
@@ -457,6 +464,9 @@ function bindQuestionsModal() {
 }
 
 async function openQuestionsModal() {
+  document.getElementById('settingsModal').hidden = true;
+  document.getElementById('apptModal').hidden = true;
+
   document.getElementById('questionsModal').hidden = false;
   await renderQuestionBank();
 }
