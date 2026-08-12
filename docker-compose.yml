@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  healthcaretracker:
+    build: .
+    container_name: healthcaretracker
+    restart: unless-stopped
+    ports:
+      - "3040:3040"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data

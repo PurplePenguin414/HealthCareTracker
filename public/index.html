@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HealthCareTracker</title>
+<link rel="stylesheet" href="app.css?v=1">
+</head>
+<body>
+  <header class="topbar">
+    <h1>HealthCareTracker</h1>
+    <div class="topbar-actions">
+      <button id="darkModeToggle" class="icon-btn" title="Toggle dark mode">🌙</button>
+      <button id="settingsBtn" class="icon-btn" title="Settings">⚙️</button>
+      <button id="logoutBtn" class="icon-btn" title="Log out">⎋</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-type="therapy">Therapy / EMDR</button>
+    <button class="tab-btn" data-type="dietitian">Dietitian</button>
+    <button class="tab-btn" data-type="doctor">Doctor</button>
+    <button class="tab-btn" data-type="other">Other</button>
+  </nav>
+
+  <main id="mainContent">
+    <div class="toolbar">
+      <div class="view-toggle">
+        <button class="view-btn active" data-view="upcoming">Upcoming</button>
+        <button class="view-btn" data-view="history">History</button>
+        <button class="view-btn therapy-only" data-view="prep">Prep Checklist</button>
+      </div>
+      <button id="addApptBtn" class="primary-btn">+ New Appointment</button>
+    </div>
+
+    <div id="upcomingView" class="view-panel">
+      <div id="appointmentList" class="appointment-list"></div>
+    </div>
+
+    <div id="historyView" class="view-panel" hidden>
+      <div id="historyList" class="appointment-list"></div>
+    </div>
+
+    <div id="prepView" class="view-panel therapy-only" hidden>
+      <div class="prep-header">
+        <h2>Prep Checklist</h2>
+        <button id="manageQuestionsBtn" class="secondary-btn">Manage Questions</button>
+      </div>
+      <p class="prep-hint">Select an upcoming therapy appointment to check off what you want to bring up.</p>
+      <select id="prepApptSelect"></select>
+      <div id="prepChecklist" class="prep-checklist"></div>
+    </div>
+  </main>
+
+  <!-- Appointment Add/Edit Modal -->
+  <div id="apptModal" class="modal" hidden>
+    <div class="modal-content">
+      <button class="modal-close" id="closeModalBtn">&times;</button>
+      <h2 id="modalTitle">New Appointment</h2>
+      <form id="apptForm">
+        <input type="hidden" id="apptId">
+        <input type="hidden" id="apptType">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="providerName">Provider Name</label>
+            <input type="text" id="providerName">
+          </div>
+          <div class="form-group">
+            <label for="apptStatus">Status</label>
+            <select id="apptStatus">
+              <option value="upcoming">Upcoming</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="apptDate">Date</label>
+            <input type="date" id="apptDate" required>
+          </div>
+          <div class="form-group">
+            <label for="apptTime">Time</label>
+            <input type="time" id="apptTime">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="apptLocation">Location</label>
+          <input type="text" id="apptLocation">
+        </div>
+
+        <div id="typeSpecificFields"></div>
+
+        <div class="form-group">
+          <label for="apptNotes">Notes</label>
+          <textarea id="apptNotes" rows="4"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="fileUpload">Attachments (PDF, image)</label>
+          <input type="file" id="fileUpload" accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.txt">
+          <div id="attachmentList" class="attachment-list"></div>
+        </div>
+
+        <div class="form-group checkbox-row">
+          <input type="checkbox" id="reminderEnabled" checked>
+          <label for="reminderEnabled">Enable reminder</label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="deleteApptBtn" class="danger-btn" hidden>Delete</button>
+          <button type="submit" class="primary-btn">Save Appointment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Manage Questions Modal -->
+  <div id="questionsModal" class="modal" hidden>
+    <div class="modal-content">
+      <button class="modal-close" id="closeQuestionsModalBtn">&times;</button>
+      <h2>EMDR Question Bank</h2>
+      <form id="addQuestionForm" class="inline-form">
+        <input type="text" id="newQuestionText" placeholder="Add a new question...">
+        <button type="submit" class="primary-btn">Add</button>
+      </form>
+      <div id="questionBankList" class="question-bank-list"></div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal" hidden>
+    <div class="modal-content">
+      <button class="modal-close" id="closeSettingsModalBtn">&times;</button>
+      <h2>Settings</h2>
+
+      <h3 class="settings-subhead">Change Password</h3>
+      <form id="changePasswordForm">
+        <div class="form-group">
+          <label for="currentPassword">Current Password</label>
+          <input type="password" id="currentPassword" autocomplete="current-password" required>
+        </div>
+        <div class="form-group">
+          <label for="newPassword">New Password</label>
+          <input type="password" id="newPassword" autocomplete="new-password" required minlength="8">
+        </div>
+        <div class="form-group">
+          <label for="confirmPassword">Confirm New Password</label>
+          <input type="password" id="confirmPassword" autocomplete="new-password" required minlength="8">
+        </div>
+        <p id="settingsError" class="error-text" hidden></p>
+        <p id="settingsSuccess" class="success-text" hidden></p>
+        <button type="submit" class="primary-btn">Update Password</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js?v=1"></script>
+</body>
+</html>
