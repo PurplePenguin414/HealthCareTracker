@@ -16,14 +16,35 @@
   </header>
 
   <nav class="tabs">
-    <button class="tab-btn active" data-type="therapy">Therapy / EMDR</button>
+    <button class="tab-btn active" data-type="dashboard">Dashboard</button>
+    <button class="tab-btn" data-type="therapy">Therapy / EMDR</button>
     <button class="tab-btn" data-type="dietitian">Dietitian</button>
     <button class="tab-btn" data-type="doctor">Doctor</button>
     <button class="tab-btn" data-type="other">Other</button>
   </nav>
 
   <main id="mainContent">
-    <div class="toolbar">
+    <div id="dashboardView" class="view-panel">
+      <h2 class="dashboard-heading">Upcoming Appointments</h2>
+      <div class="dashboard-section">
+        <h3 class="dashboard-section-title">Therapy / EMDR</h3>
+        <div id="dashTherapy" class="appointment-list"></div>
+      </div>
+      <div class="dashboard-section">
+        <h3 class="dashboard-section-title">Dietitian</h3>
+        <div id="dashDietitian" class="appointment-list"></div>
+      </div>
+      <div class="dashboard-section">
+        <h3 class="dashboard-section-title">Doctor</h3>
+        <div id="dashDoctor" class="appointment-list"></div>
+      </div>
+      <div class="dashboard-section">
+        <h3 class="dashboard-section-title">Other</h3>
+        <div id="dashOther" class="appointment-list"></div>
+      </div>
+    </div>
+
+    <div class="toolbar" id="typeToolbar" hidden>
       <div class="view-toggle">
         <button class="view-btn active" data-view="upcoming">Upcoming</button>
         <button class="view-btn" data-view="history">History</button>
@@ -130,6 +151,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

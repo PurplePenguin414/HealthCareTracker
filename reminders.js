@@ -77,21 +77,51 @@ function buildEmbed(appt, daysUntil) {
 
 function checkAndSendReminders() {
   const today = todayStr();
+  const maxLead = Math.max(...LEAD_DAYS, 0);
 
+  // Widened window: instead of only matching an exact lead-day date, catch anything
+  // from today through the furthest lead day out. Each appointment still only gets
+  // reminded once per lead-day threshold it crosses (tracked via reminder_log).
   LEAD_DAYS.forEach(leadDays => {
     const targetDate = addDays(today, leadDays);
     const appts = db.prepare(`
       SELECT * FROM appointments
-      WHERE appointment_date = ? AND status = 'upcoming' AND reminder_enabled = 1
-    `).all(targetDate);
+      WHERE appointment_date <= ? AND appointment_date >= ?
+        AND status = 'upcoming' AND reminder_enabled = 1
+    `).all(targetDate, today);
 
     appts.forEach(appt => {
-      postToDiscord(buildEmbed(appt, leadDays));
+      const daysUntil = daysBetween(today, appt.appointment_date);
+      // Only send if this appointment's actual days-until matches a configured
+      // lead day, or if we're at/past a lead day and haven't sent for it yet
+      // (covers the case where the app was off on the exact lead day).
+      const alreadySent = db.prepare(`
+        SELECT 1 FROM reminder_log WHERE appointment_id = ? AND lead_days = ?
+      `).get(appt.id, leadDays);
+
+      if (!alreadySent && daysUntil <= leadDays) {
+        postToDiscord(buildEmbed(appt, daysUntil));
+        db.prepare(`
+          INSERT INTO reminder_log (appointment_id, lead_days, sent_at)
+          VALUES (?, ?, datetime('now'))
+        `).run(appt.id, leadDays);
+      }
     });
   });
 }
 
+function daysBetween(fromDateStr, toDateStr) {
+  const from = new Date(fromDateStr + 'T00:00:00');
+  const to = new Date(toDateStr + 'T00:00:00');
+  return Math.round((to - from) / (1000 * 60 * 60 * 24));
+}
+
 function startReminderScheduler() {
+  // Run once immediately on startup — catches anything due while the app was off
+  // (e.g. laptop shut down over the exact 8am cron window).
+  console.log('Running startup reminder catch-up check...');
+  checkAndSendReminders();
+
   // Daily at 8:00 AM America/Detroit — same convention as MedsTracker
   cron.schedule('0 8 * * *', () => {
     console.log('Running appointment reminder check...');

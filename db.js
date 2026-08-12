@@ -96,6 +96,16 @@ CREATE TABLE IF NOT EXISTS appointment_question_checks (
 CREATE INDEX IF NOT EXISTS idx_appointments_type ON appointments(type);
 CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(appointment_date);
 CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
+
+-- Tracks which lead-day reminders have already been sent per appointment,
+-- so a missed cron run (laptop off) can catch up without double-sending.
+CREATE TABLE IF NOT EXISTS reminder_log (
+  appointment_id INTEGER NOT NULL,
+  lead_days INTEGER NOT NULL,
+  sent_at TEXT NOT NULL,
+  PRIMARY KEY (appointment_id, lead_days),
+  FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE
+);
 `);
 
 // Seed a default user only if none exists yet (username/password set via env on first run)

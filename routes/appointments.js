@@ -55,19 +55,19 @@ router.get('/', (req, res) => {
   res.json(rows);
 });
 
-// GET /api/appointments/history/:type?limit=5
+// GET /api/appointments/history/:type  (last 5 days only, most recent first)
 router.get('/history/:type', (req, res) => {
   const { type } = req.params;
-  const limit = parseInt(req.query.limit) || 5;
   if (!DETAIL_FIELDS_BY_TYPE.hasOwnProperty(type)) {
     return res.status(400).json({ error: 'Invalid type' });
   }
   const rows = db.prepare(`
     SELECT * FROM appointments
     WHERE type = ? AND status = 'completed'
+      AND appointment_date >= date('now', '-5 days')
+      AND appointment_date <= date('now')
     ORDER BY appointment_date DESC, appointment_time DESC
-    LIMIT ?
-  `).all(type, limit);
+  `).all(type);
   res.json(rows.map(r => getFullAppointment(r.id)));
 });
 

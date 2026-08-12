@@ -1,5 +1,5 @@
 // ---- State ----
-let currentType = 'therapy';
+let currentType = 'dashboard';
 let currentView = 'upcoming';
 let pendingAttachments = []; // files staged before appointment is saved
 let editingApptId = null;
@@ -73,17 +73,63 @@ function bindTabs() {
       btn.classList.add('active');
       currentType = btn.dataset.type;
 
+      if (currentType === 'dashboard') {
+        document.getElementById('dashboardView').hidden = false;
+        document.getElementById('typeToolbar').hidden = true;
+        document.getElementById('upcomingView').hidden = true;
+        document.getElementById('historyView').hidden = true;
+        document.getElementById('prepView').hidden = true;
+        loadDashboard();
+        return;
+      }
+
+      document.getElementById('dashboardView').hidden = true;
+      document.getElementById('typeToolbar').hidden = false;
+
       const isTherapy = currentType === 'therapy';
       document.querySelectorAll('.therapy-only').forEach(el => {
         el.style.display = isTherapy ? '' : 'none';
       });
       if (!isTherapy && currentView === 'prep') switchView('upcoming');
-
-      loadAppointments();
+      else switchView(currentView);
     });
   });
-  // hide therapy-only elements by default state handled by tab click above
-  document.querySelectorAll('.tab-btn')[0].click();
+  // Land on the dashboard by default
+  document.querySelector('.tab-btn[data-type="dashboard"]').click();
+}
+
+async function loadDashboard() {
+  const types = [
+    { type: 'therapy', el: 'dashTherapy' },
+    { type: 'dietitian', el: 'dashDietitian' },
+    { type: 'doctor', el: 'dashDoctor' },
+    { type: 'other', el: 'dashOther' }
+  ];
+
+  for (const { type, el } of types) {
+    const res = await fetch(`/api/appointments?type=${type}&status=upcoming`);
+    const appts = await res.json();
+    const container = document.getElementById(el);
+
+    if (!appts.length) {
+      container.innerHTML = '<div class="empty-state">No upcoming appointments.</div>';
+      continue;
+    }
+
+    container.innerHTML = appts.map(a => `
+      <div class="appt-card" data-id="${a.id}" data-type="${type}">
+        <div class="appt-card-top">
+          <span class="appt-card-date">${formatDate(a.appointment_date)}${a.appointment_time ? ' · ' + formatTime(a.appointment_time) : ''}</span>
+          <span class="appt-status status-${a.status}">${a.status}</span>
+        </div>
+        <div class="appt-card-provider">${escapeHtml(a.provider_name || 'No provider listed')}${a.location ? ' — ' + escapeHtml(a.location) : ''}</div>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('.appt-card').forEach(card => {
+      card.addEventListener('click', () => openApptModal(card.dataset.id));
+    });
+  }
 }
 
 // ---- View toggle (Upcoming / History / Prep) ----
@@ -113,7 +159,7 @@ async function loadAppointments() {
 }
 
 async function loadHistory() {
-  const res = await fetch(`/api/appointments/history/${currentType}?limit=10`);
+  const res = await fetch(`/api/appointments/history/${currentType}`);
   const appts = await res.json();
   renderApptList(appts, document.getElementById('historyList'));
 }
@@ -324,8 +370,7 @@ async function saveAppointment(e) {
   pendingAttachments = [];
 
   closeApptModal();
-  if (currentView === 'upcoming') loadAppointments();
-  else if (currentView === 'history') loadHistory();
+  refreshCurrentView();
 }
 
 async function deleteAppointment() {
@@ -334,8 +379,18 @@ async function deleteAppointment() {
   if (!confirm('Delete this appointment? This cannot be undone.')) return;
   await fetch(`/api/appointments/${id}`, { method: 'DELETE' });
   closeApptModal();
-  if (currentView === 'upcoming') loadAppointments();
-  else if (currentView === 'history') loadHistory();
+  refreshCurrentView();
+}
+
+function refreshCurrentView() {
+  const activeTab = document.querySelector('.tab-btn.active')?.dataset.type;
+  if (activeTab === 'dashboard') {
+    loadDashboard();
+  } else if (currentView === 'upcoming') {
+    loadAppointments();
+  } else if (currentView === 'history') {
+    loadHistory();
+  }
 }
 
 // ---- Prep Checklist (Therapy only) ----

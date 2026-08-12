@@ -341,6 +341,19 @@ main { padding: 1.25rem 1.5rem 3rem; max-width: 900px; margin: 0 auto; }
 
 .therapy-only { display: none; }
 
+/* ---- Dashboard ---- */
+.dashboard-heading { margin: 0 0 1.25rem; font-size: 1.3rem; }
+.dashboard-section { margin-bottom: 1.75rem; }
+.dashboard-section-title {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 0 0 0.6rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
 @media (max-width: 600px) {
   .form-row { flex-direction: column; gap: 0; }
   main { padding: 1rem; }
