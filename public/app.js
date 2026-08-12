@@ -34,7 +34,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindViewToggle();
   bindApptModal();
   bindQuestionsModal();
-  loadAppointments();
 });
 
 async function checkSession() {

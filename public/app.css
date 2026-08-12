@@ -30,6 +30,11 @@
 
 * { box-sizing: border-box; }
 
+/* Belt-and-suspenders: several elements below set their own `display` value,
+   which otherwise silently defeats the native [hidden] attribute. This keeps
+   hidden authoritative regardless of what display any class sets. */
+[hidden] { display: none !important; }
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
