@@ -222,6 +222,7 @@ main { padding: 1.25rem 1.5rem 3rem; max-width: 900px; margin: 0 auto; }
   overflow-y: auto;
   z-index: 100;
 }
+.modal[hidden] { display: none; }
 .modal-content {
   background: var(--surface);
   border-radius: 12px;
