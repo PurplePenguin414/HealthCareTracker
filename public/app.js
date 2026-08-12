@@ -34,7 +34,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindViewToggle();
   bindApptModal();
   bindQuestionsModal();
-  bindSettingsModal();
   loadAppointments();
 });
 
@@ -63,61 +62,6 @@ function bindTopbar() {
   document.getElementById('logoutBtn').addEventListener('click', async () => {
     await fetch('/api/logout', { method: 'POST' });
     window.location.href = '/login.html';
-  });
-}
-
-// ---- Settings ----
-function bindSettingsModal() {
-  document.getElementById('settingsBtn').addEventListener('click', () => {
-    // Prevent stacking on top of the appointment or questions modal
-    document.getElementById('apptModal').hidden = true;
-    document.getElementById('questionsModal').hidden = true;
-
-    document.getElementById('changePasswordForm').reset();
-    document.getElementById('settingsError').hidden = true;
-    document.getElementById('settingsSuccess').hidden = true;
-    document.getElementById('settingsModal').hidden = false;
-  });
-  document.getElementById('closeSettingsModalBtn').addEventListener('click', () => {
-    document.getElementById('settingsModal').hidden = true;
-  });
-  document.getElementById('settingsModal').addEventListener('click', (e) => {
-    if (e.target.id === 'settingsModal') document.getElementById('settingsModal').hidden = true;
-  });
-
-  document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const errorEl = document.getElementById('settingsError');
-    const successEl = document.getElementById('settingsSuccess');
-    errorEl.hidden = true;
-    successEl.hidden = true;
-
-    const currentPassword = document.getElementById('currentPassword').value;
-    const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-
-    if (newPassword !== confirmPassword) {
-      errorEl.textContent = 'New password and confirmation do not match.';
-      errorEl.hidden = false;
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/change-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPassword, newPassword })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update password');
-
-      successEl.textContent = 'Password updated successfully.';
-      successEl.hidden = false;
-      document.getElementById('changePasswordForm').reset();
-    } catch (err) {
-      errorEl.textContent = err.message;
-      errorEl.hidden = false;
-    }
   });
 }
 
@@ -224,7 +168,6 @@ function bindApptModal() {
 }
 
 async function openApptModal(id) {
-  document.getElementById('settingsModal').hidden = true;
   document.getElementById('questionsModal').hidden = true;
 
   editingApptId = id;
@@ -464,7 +407,6 @@ function bindQuestionsModal() {
 }
 
 async function openQuestionsModal() {
-  document.getElementById('settingsModal').hidden = true;
   document.getElementById('apptModal').hidden = true;
 
   document.getElementById('questionsModal').hidden = false;
