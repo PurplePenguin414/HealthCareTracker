@@ -1,19 +1,14 @@
-FROM node:20-slim
-
-# Needed for better-sqlite3 native build + tzdata for correct local time in cron
-RUN apt-get update && apt-get install -y python3 make g++ tzdata && rm -rf /var/lib/apt/lists/*
-
-ENV TZ=America/Detroit
+FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package.json ./
-RUN npm install --omit=dev
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
 COPY . .
 
-RUN mkdir -p /app/data/uploads
+RUN mkdir -p /app/data
 
-EXPOSE 3040
+EXPOSE 3000
 
 CMD ["node", "server.js"]

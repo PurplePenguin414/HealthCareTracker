@@ -2,155 +2,495 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HealthCareTracker</title>
-<link rel="stylesheet" href="app.css?v=4">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>My Health</title>
+<link rel="stylesheet" href="style.css?v=13">
+
+<!-- Home screen / PWA support -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Health">
+<meta name="theme-color" content="#2f6f9f">
+<link rel="icon" type="image/x-icon" href="favicon.ico?v=1">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=1">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=1">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=1">
 </head>
 <body>
+
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <h1>My Health</h1>
+    <form id="login-form">
+      <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" required>
+      <button type="submit">Log in</button>
+      <div id="login-error" class="login-error"></div>
+    </form>
+  </div>
+</div>
+
+<div id="app" class="app hidden">
+
   <header class="topbar">
-    <h1>HealthCareTracker</h1>
+    <h1>My Health</h1>
     <div class="topbar-actions">
-      <button id="darkModeToggle" class="icon-btn" title="Toggle dark mode">🌙</button>
-      <button id="logoutBtn" class="icon-btn" title="Log out">⎋</button>
+      <span class="theme-toggle-wrap">
+        <span class="theme-toggle-icon">☀️</span>
+        <label class="theme-toggle">
+          <input type="checkbox" id="theme-toggle-checkbox">
+          <span class="theme-toggle-slider"></span>
+        </label>
+        <span class="theme-toggle-icon">🌙</span>
+      </span>
+      <button id="add-med-btn" class="btn btn-primary mode-only-meds">+ Add</button>
+      <div class="more-menu-wrap">
+        <button id="more-menu-btn" class="btn btn-ghost" aria-label="More actions">⋯</button>
+        <div id="more-menu-panel" class="more-menu-panel hidden">
+          <button type="button" class="more-menu-item" id="export-pdf-btn">Export PDF</button>
+          <button type="button" class="more-menu-item" id="export-history-pdf-btn">Export Full History</button>
+          <button type="button" class="more-menu-item" id="test-reminder-btn">Test med Discord reminder</button>
+          <button type="button" class="more-menu-item" id="test-appt-reminder-btn">Test appointment Discord reminder</button>
+          <div class="more-menu-divider"></div>
+          <button type="button" class="more-menu-item" id="logout-btn">Log out</button>
+        </div>
+      </div>
     </div>
   </header>
 
-  <nav class="tabs">
-    <button class="tab-btn active" data-type="dashboard">Dashboard</button>
-    <button class="tab-btn" data-type="therapy">Therapy / EMDR</button>
-    <button class="tab-btn" data-type="dietitian">Dietitian</button>
-    <button class="tab-btn" data-type="doctor">Doctor</button>
-    <button class="tab-btn" data-type="other">Other</button>
-  </nav>
+  <div class="mode-tab-row">
+    <button type="button" class="mode-tab-btn active" data-mode="meds">Medications</button>
+    <button type="button" class="mode-tab-btn" data-mode="appointments">Appointments</button>
+    <button type="button" class="mode-tab-btn" data-mode="period">Period</button>
+    <button type="button" class="mode-tab-btn" data-mode="therapy">Therapy Notes</button>
+    <button type="button" class="mode-tab-btn" data-mode="emergency">Emergency Info</button>
+  </div>
 
-  <main id="mainContent">
-    <div id="dashboardView" class="view-panel">
-      <h2 class="dashboard-heading">Upcoming Appointments</h2>
-      <div class="dashboard-section">
-        <h3 class="dashboard-section-title">Therapy / EMDR</h3>
-        <div id="dashTherapy" class="appointment-list"></div>
-      </div>
-      <div class="dashboard-section">
-        <h3 class="dashboard-section-title">Dietitian</h3>
-        <div id="dashDietitian" class="appointment-list"></div>
-      </div>
-      <div class="dashboard-section">
-        <h3 class="dashboard-section-title">Doctor</h3>
-        <div id="dashDoctor" class="appointment-list"></div>
-      </div>
-      <div class="dashboard-section">
-        <h3 class="dashboard-section-title">Other</h3>
-        <div id="dashOther" class="appointment-list"></div>
-      </div>
+  <div id="meds-view" class="mode-view">
+    <div class="summary-strip" id="summary-strip"></div>
+    <main id="med-list" class="med-list"></main>
+  </div>
+
+  <div id="appointments-view" class="mode-view hidden">
+
+    <nav class="appt-tabs">
+      <button class="appt-tab-btn active" data-type="dashboard">Dashboard</button>
+      <button class="appt-tab-btn" data-type="therapy">Therapy</button>
+      <button class="appt-tab-btn" data-type="dietitian">Dietitian</button>
+      <button class="appt-tab-btn" data-type="doctor">Doctor</button>
+      <button class="appt-tab-btn" data-type="other">Other</button>
+    </nav>
+
+    <div id="appt-dashboard-view" class="appt-view-panel">
+      <h2 class="appt-dashboard-heading">Upcoming Appointments</h2>
+      <div id="appt-dash-all" class="appt-list"></div>
     </div>
 
-    <div class="toolbar" id="typeToolbar" hidden>
-      <div class="view-toggle">
-        <button class="view-btn active" data-view="upcoming">Upcoming</button>
-        <button class="view-btn" data-view="history">History</button>
-        <button class="view-btn therapy-only" data-view="prep">Prep Checklist</button>
+    <div class="appt-toolbar hidden" id="appt-type-toolbar">
+      <div class="appt-view-toggle">
+        <button class="appt-view-btn active" data-view="upcoming">Upcoming</button>
+        <button class="appt-view-btn" data-view="history">History</button>
+        <button class="appt-view-btn appt-therapy-only" data-view="prep">Prep Checklist</button>
       </div>
-      <button id="addApptBtn" class="primary-btn">+ New Appointment</button>
+      <button id="add-appt-btn" class="btn btn-primary">+ New Appointment</button>
     </div>
 
-    <div id="upcomingView" class="view-panel">
-      <div id="appointmentList" class="appointment-list"></div>
+    <div id="appt-upcoming-view" class="appt-view-panel hidden">
+      <div id="appt-upcoming-list" class="appt-list"></div>
     </div>
 
-    <div id="historyView" class="view-panel" hidden>
-      <div id="historyList" class="appointment-list"></div>
+    <div id="appt-history-view" class="appt-view-panel hidden">
+      <div id="appt-history-list" class="appt-list"></div>
     </div>
 
-    <div id="prepView" class="view-panel therapy-only" hidden>
-      <div class="prep-header">
+    <div id="appt-prep-view" class="appt-view-panel appt-therapy-only hidden">
+      <div class="appt-prep-header">
         <h2>Prep Checklist</h2>
-        <button id="manageQuestionsBtn" class="secondary-btn">Manage Questions</button>
+        <button id="manage-appt-questions-btn" class="btn btn-ghost btn-small">Manage Questions</button>
       </div>
-      <p class="prep-hint">Select an upcoming therapy appointment to check off what you want to bring up.</p>
-      <select id="prepApptSelect"></select>
-      <div id="prepChecklist" class="prep-checklist"></div>
+      <p class="appt-prep-hint">Select an upcoming therapy appointment to check off what you want to bring up.</p>
+      <select id="appt-prep-select"></select>
+      <div id="appt-prep-checklist" class="appt-prep-checklist"></div>
     </div>
-  </main>
 
-  <!-- Appointment Add/Edit Modal -->
-  <div id="apptModal" class="modal" hidden>
-    <div class="modal-content">
-      <button class="modal-close" id="closeModalBtn">&times;</button>
-      <h2 id="modalTitle">New Appointment</h2>
-      <form id="apptForm">
-        <input type="hidden" id="apptId">
-        <input type="hidden" id="apptType">
+  </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="providerName">Provider Name</label>
-            <input type="text" id="providerName">
-          </div>
-          <div class="form-group">
-            <label for="apptStatus">Status</label>
-            <select id="apptStatus">
-              <option value="upcoming">Upcoming</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+  <div id="period-view" class="mode-view hidden">
+    <div class="period-toolbar">
+      <h2 class="period-heading">Period Tracker</h2>
+      <div class="period-toolbar-btns">
+        <button type="button" id="period-export-btn" class="btn btn-ghost">Export for doctor</button>
+        <button type="button" id="period-add-btn" class="btn btn-ghost">+ Add past period</button>
+      </div>
+    </div>
+
+    <div id="period-load-error" class="period-msg period-msg-error hidden"></div>
+    <div class="summary-strip" id="period-summary"></div>
+    <div class="period-today" id="period-today"></div>
+
+    <div class="period-cal-card">
+      <div class="period-cal-head">
+        <button type="button" id="period-prev" class="btn btn-ghost btn-small" aria-label="Previous month">‹</button>
+        <div class="period-cal-title" id="period-cal-title"></div>
+        <button type="button" id="period-next" class="btn btn-ghost btn-small" aria-label="Next month">›</button>
+      </div>
+      <div class="period-cal-dow"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+      <div class="period-cal-grid" id="period-cal-grid"></div>
+      <div class="period-legend">
+        <span><i class="period-dot is-period"></i> Period</span>
+        <span><i class="period-dot is-predicted"></i> Expected</span>
+        <span><i class="period-dot is-log"></i> Logged</span>
+      </div>
+      <button type="button" id="period-today-btn" class="btn btn-ghost btn-small">Jump to today</button>
+    </div>
+
+    <h3 class="period-subhead">History</h3>
+    <div id="period-history"></div>
+  </div>
+
+<!-- Period: add/edit a period -->
+<div id="period-cycle-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 id="period-cycle-title">Add period</h2>
+    <form id="period-cycle-form">
+      <div class="field-row">
+        <label class="field">
+          First day
+          <input type="date" id="period-cycle-start" required>
+        </label>
+        <label class="field">
+          Last day <span class="optional">(blank if it's ongoing)</span>
+          <input type="date" id="period-cycle-end">
+        </label>
+      </div>
+      <label class="field field-wide">
+        Notes <span class="optional">(optional)</span>
+        <textarea id="period-cycle-notes" rows="2" maxlength="1000"></textarea>
+      </label>
+      <div id="period-cycle-error" class="period-msg period-msg-error hidden"></div>
+      <div class="modal-actions">
+        <button type="button" id="period-cycle-cancel" class="btn btn-ghost">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Period: export report for doctors -->
+<div id="period-export-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>Export for doctor</h2>
+    <p class="period-muted">A report of your logged periods, cycle lengths, symptoms and notes. Only what you entered is included, with no predictions.</p>
+    <div class="period-field-label">Time range</div>
+    <div id="period-export-range" class="period-chips">
+      <button type="button" class="period-chip" data-range="3m">3 months</button>
+      <button type="button" class="period-chip on" data-range="6m">6 months</button>
+      <button type="button" class="period-chip" data-range="12m">12 months</button>
+      <button type="button" class="period-chip" data-range="all">All time</button>
+    </div>
+    <div class="modal-actions period-export-actions">
+      <button type="button" id="period-export-cancel" class="btn btn-ghost">Close</button>
+      <button type="button" id="period-export-csv" class="btn btn-ghost">Download CSV</button>
+      <button type="button" id="period-export-pdf" class="btn btn-primary">Download PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- Period: log a day -->
+<div id="period-day-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 id="period-day-title">Log day</h2>
+    <form id="period-day-form">
+      <div class="period-field-label">Flow</div>
+      <div id="period-flow-options" class="period-chips"></div>
+      <div class="period-field-label">Symptoms</div>
+      <div id="period-symptom-options" class="period-chips"></div>
+      <label class="field field-wide">
+        Notes <span class="optional">(optional)</span>
+        <textarea id="period-day-notes" rows="2" maxlength="1000"></textarea>
+      </label>
+      <div id="period-day-error" class="period-msg period-msg-error hidden"></div>
+      <div class="modal-actions">
+        <button type="button" id="period-day-clear" class="btn btn-ghost">Clear day</button>
+        <button type="button" id="period-day-cancel" class="btn btn-ghost">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+  <div id="therapy-view" class="mode-view hidden">
+    <div id="therapy-root"></div>
+  </div>
+
+  <div id="emergency-view" class="mode-view hidden">
+    <div class="emg-toolbar">
+      <h2 class="emg-heading">Emergency Info</h2>
+      <div class="emg-toolbar-actions">
+        <button type="button" id="emg-print-btn" class="btn btn-ghost">🖨️ Print</button>
+        <button type="button" id="emg-edit-btn" class="btn btn-primary">Edit</button>
+      </div>
+    </div>
+
+    <div class="emg-card">
+      <div class="emg-section emg-identity">
+        <div class="emg-label">Personal Information</div>
+        <div class="emg-value emg-identity-value" id="emg-full-name">—</div>
+        <div class="emg-personal-sub">
+          Born <span id="emg-dob">—</span> &nbsp;·&nbsp; Blood Type: <span id="emg-blood-type">—</span>
+        </div>
+      </div>
+      <div class="emg-section">
+        <div class="emg-label">Allergies</div>
+        <div class="emg-value" id="emg-allergies">—</div>
+      </div>
+      <div class="emg-section">
+        <div class="emg-label">Medical Conditions</div>
+        <div class="emg-value" id="emg-conditions">—</div>
+      </div>
+      <div class="emg-section">
+        <div class="emg-label">Current Medications</div>
+        <div class="emg-value" id="emg-medications">—</div>
+      </div>
+      <div class="emg-section">
+        <div class="emg-label">Emergency Contacts</div>
+        <div class="emg-value" id="emg-contacts">—</div>
+      </div>
+      <div class="emg-section" id="emg-notes-section">
+        <div class="emg-label">Additional Notes</div>
+        <div class="emg-value" id="emg-notes">—</div>
+      </div>
+    </div>
+
+    <div class="emg-share-box" id="emg-share-box">
+      <div class="emg-label">Shareable link (no login required — for a pet-sitter, etc.)</div>
+      <p id="emg-share-status" style="color: var(--muted); font-size: 0.85rem;">Checking…</p>
+      <div id="emg-share-url-row" class="hidden" style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+        <input type="text" id="emg-share-url-field" readonly style="flex:1;">
+        <button type="button" id="emg-share-copy-btn" class="btn btn-ghost">Copy</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Emergency Info Edit Modal -->
+<div id="emg-edit-modal" class="modal-overlay hidden">
+  <div class="modal modal-wide">
+    <h2>Edit Emergency Info</h2>
+    <form id="emg-edit-form">
+      <div class="field-row">
+        <label class="field">
+          Full Name
+          <input type="text" id="emg-input-full-name" placeholder="e.g. Jane Doe">
+        </label>
+        <label class="field">
+          Date of Birth
+          <input type="date" id="emg-input-dob">
+        </label>
+      </div>
+      <div class="field-row">
+        <label class="field">
+          Blood Type
+          <input type="text" id="emg-input-blood-type" placeholder="e.g. O+">
+        </label>
+      </div>
+      <label class="field field-wide">
+        Allergies
+        <textarea id="emg-input-allergies" rows="2" placeholder="Medications, foods, environmental…"></textarea>
+      </label>
+      <label class="field field-wide">
+        Medical Conditions
+        <textarea id="emg-input-conditions" rows="2"></textarea>
+      </label>
+      <label class="field field-wide">
+        Additional Notes
+        <textarea id="emg-input-notes" rows="2" placeholder="Anything else someone should know"></textarea>
+      </label>
+
+      <h3 class="settings-subhead">Emergency Contacts</h3>
+      <div id="emg-contacts-list"></div>
+      <div class="add-block-form">
+        <div class="field-row">
+          <label class="field">
+            Name
+            <input type="text" id="emg-new-contact-name" placeholder="Name">
+          </label>
+          <label class="field">
+            Relationship
+            <input type="text" id="emg-new-contact-relationship" placeholder="Relationship">
+          </label>
+          <label class="field">
+            Phone
+            <input type="text" id="emg-new-contact-phone" placeholder="Phone">
+          </label>
+        </div>
+        <button type="button" id="emg-add-contact-btn" class="btn btn-ghost btn-small">+ Add Contact</button>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="emg-close-edit-btn" class="btn btn-ghost">Close</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Appointment Add/Edit Modal -->
+<div id="appt-modal" class="modal-overlay hidden">
+  <div class="modal modal-wide">
+    <h2 id="appt-modal-title">New Appointment</h2>
+    <form id="appt-form">
+      <input type="hidden" id="appt-id">
+      <input type="hidden" id="appt-type">
+
+      <div class="field-row">
+        <label class="field">
+          Provider Name
+          <input type="text" id="appt-provider-name">
+        </label>
+        <label class="field">
+          Status
+          <select id="appt-status">
+            <option value="upcoming">Upcoming</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="field-row">
+        <label class="field">
+          Date
+          <input type="date" id="appt-date" required>
+        </label>
+        <label class="field">
+          Time
+          <input type="time" id="appt-time">
+        </label>
+      </div>
+
+      <label class="field field-wide">
+        Location
+        <input type="text" id="appt-location">
+      </label>
+
+      <div id="appt-type-specific-fields"></div>
+
+      <label class="field field-wide">
+        Notes
+        <textarea id="appt-notes" rows="3"></textarea>
+      </label>
+
+      <label class="field field-wide">
+        Attachments (PDF, image)
+        <input type="file" id="appt-file-upload" accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.txt">
+      </label>
+      <div id="appt-attachment-list" class="appt-attachment-list"></div>
+
+      <label class="field-inline">
+        <input type="checkbox" id="appt-reminder-enabled" checked>
+        Enable reminder
+      </label>
+
+      <div class="modal-actions">
+        <button type="button" id="delete-appt-btn" class="btn btn-danger hidden">Delete</button>
+        <button type="submit" class="btn btn-primary">Save Appointment</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Manage Questions Modal -->
+<div id="appt-questions-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>Prep Question Bank</h2>
+    <form id="appt-add-question-form" class="inline-add-form">
+      <div class="field-row">
+        <input type="text" id="appt-new-question-text" placeholder="Add a new question...">
+        <button type="submit" class="btn btn-primary btn-small">Add</button>
+      </div>
+    </form>
+    <div id="appt-question-bank-list" class="appt-question-bank-list"></div>
+    <div class="modal-actions">
+      <button type="button" id="close-appt-questions-btn" class="btn btn-ghost">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- History Modal: tabbed view with inline "add entry" forms -->
+<div id="history-modal" class="modal-overlay hidden">
+  <div class="modal modal-wide">
+    <h2 id="history-title">History</h2>
+
+    <div class="tab-row">
+      <button type="button" class="tab-btn active" data-tab="pickups" onclick="switchHistoryTab('pickups')">Pickups</button>
+      <button type="button" class="tab-btn" data-tab="symptoms" onclick="switchHistoryTab('symptoms')">Symptoms</button>
+      <button type="button" class="tab-btn" data-tab="titration" onclick="switchHistoryTab('titration')">Titration</button>
+    </div>
+
+    <div id="tab-pickups" class="tab-panel">
+      <div id="history-list" class="history-list"></div>
+    </div>
+
+    <div id="tab-symptoms" class="tab-panel hidden">
+      <div id="symptoms-list" class="history-list"></div>
+      <div class="inline-add-form">
+        <div class="field-row">
+          <label class="field">
+            Date
+            <input type="date" id="symptom-date">
+          </label>
+          <label class="field">
+            Severity
+            <select id="symptom-severity">
+              <option value="Mild">Mild</option>
+              <option value="Moderate">Moderate</option>
+              <option value="Severe">Severe</option>
             </select>
-          </div>
+          </label>
         </div>
+        <label class="field field-wide">
+          Description <span class="optional">(optional)</span>
+          <textarea id="symptom-description" rows="2" placeholder="What happened, when it started, anything notable..."></textarea>
+        </label>
+        <div class="form-error" id="symptom-form-error"></div>
+        <button type="button" class="btn btn-primary btn-small" onclick="addSymptomLog()">Log symptom</button>
+      </div>
+    </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="apptDate">Date</label>
-            <input type="date" id="apptDate" required>
-          </div>
-          <div class="form-group">
-            <label for="apptTime">Time</label>
-            <input type="time" id="apptTime">
-          </div>
+    <div id="tab-titration" class="tab-panel hidden">
+      <div id="titration-list" class="history-list"></div>
+      <div class="inline-add-form">
+        <div class="field-row">
+          <label class="field">
+            Date
+            <input type="date" id="dose-change-date">
+          </label>
+          <label class="field">
+            New dosage
+            <input type="text" id="dose-change-new-dosage" placeholder="e.g. 20mg">
+          </label>
         </div>
+        <label class="field field-wide">
+          Notes <span class="optional">(optional)</span>
+          <textarea id="dose-change-notes" rows="2" placeholder="Reason for the change, how you're tolerating it..."></textarea>
+        </label>
+        <div class="form-error" id="dose-change-form-error"></div>
+        <button type="button" class="btn btn-primary btn-small" onclick="addDoseChange()">Log dose change</button>
+      </div>
+    </div>
 
-        <div class="form-group">
-          <label for="apptLocation">Location</label>
-          <input type="text" id="apptLocation">
-        </div>
-
-        <div id="typeSpecificFields"></div>
-
-        <div class="form-group">
-          <label for="apptNotes">Notes</label>
-          <textarea id="apptNotes" rows="4"></textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="fileUpload">Attachments (PDF, image)</label>
-          <input type="file" id="fileUpload" accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.txt">
-          <div id="attachmentList" class="attachment-list"></div>
-        </div>
-
-        <div class="form-group checkbox-row">
-          <input type="checkbox" id="reminderEnabled" checked>
-          <label for="reminderEnabled">Enable reminder</label>
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" id="deleteApptBtn" class="danger-btn" hidden>Delete</button>
-          <button type="submit" class="primary-btn">Save Appointment</button>
-        </div>
-      </form>
+    <div class="modal-actions">
+      <button type="button" id="history-close-btn" class="btn btn-ghost">Close</button>
     </div>
   </div>
+</div>
 
-  <!-- Manage Questions Modal -->
-  <div id="questionsModal" class="modal" hidden>
-    <div class="modal-content">
-      <button class="modal-close" id="closeQuestionsModalBtn">&times;</button>
-      <h2>EMDR Question Bank</h2>
-      <form id="addQuestionForm" class="inline-form">
-        <input type="text" id="newQuestionText" placeholder="Add a new question...">
-        <button type="submit" class="primary-btn">Add</button>
-      </form>
-      <div id="questionBankList" class="question-bank-list"></div>
-    </div>
-  </div>
-
-  <script src="app.js?v=6"></script>
+<script src="app.js?v=16"></script>
+<script src="therapy.js?v=2"></script>
+<script src="period.js?v=1"></script>
 </body>
 </html>
