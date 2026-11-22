@@ -17,7 +17,7 @@ It is built for **one person** (a single shared password, not multi-user account
 ## Quick start (Docker)
 
 ```bash
-git clone https://github.com/<you>/<your-repo>.git my-health
+git clone https://github.com/PurplePenguin414/HealthCareTracker.git my-health
 cd my-health
 cp .env.example .env
 ```
